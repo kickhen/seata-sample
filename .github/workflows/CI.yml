@@ -1,0 +1,35 @@
+name: Java CI
+
+on: [ push,pull_request ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        java: [ 8, 11 ]
+      fail-fast: false
+      max-parallel: 2
+    name: Test JDK ${{ matrix.java }}, ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3.12.0
+        with:
+          distribution: 'zulu'
+          java-version: ${{ matrix.java }}
+      - name: Test with Maven
+        run: |
+          directories=("at-sample" "saga-sample" "tcc-sample" "xa-sample")
+          for dir in "${directories[@]}"; do
+            for subdir in "$dir"/*; do
+              if [ -d "$subdir" ]; then
+                echo "Entering directory $subdir"
+                cd "$subdir"
+                mvn -B test
+                cd - > /dev/null
+              fi
+            done
+          done
